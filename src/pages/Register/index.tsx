@@ -48,7 +48,9 @@ const Register = () => {
             });
             dispatch(setToken(accessToken));
             localStorage.setItem('token', JSON.stringify(accessToken));
-            navigate('/');
+            setTimeout(() => {
+               navigate('/');
+            }, 2000);
          } else {
             setInfoNotifi({
                isOpen: true,
