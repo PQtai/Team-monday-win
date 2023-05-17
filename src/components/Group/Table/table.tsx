@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHouseMedicalCircleExclamation, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { faPlus } from '@fortawesome/free-solid-svg-icons';
 import { IColumn } from '~/shared/model/column';
 import { IGroup } from '~/shared/model/group';
 import { useState, useRef, useEffect, Fragment } from 'react';
@@ -12,17 +12,15 @@ import { useAppDispatch, useAppSelector } from '~/config/store';
 import TaskEdit from './TaskEdit/taskEdit';
 import Column from '~/components/Column/column';
 import ListType from '~/components/ListTypes/listTypes';
-import { createColumn } from '~/components/MainTable/mainTable.reducer';
-import { ITask } from '~/shared/model/task';
+import { createColumn, resetDataCreateCol } from '~/components/MainTable/mainTable.reducer';
+import { ITask, IValueOfTask } from '~/shared/model/task';
 import { IResponseData } from '~/shared/model/global';
 interface IPropsTable {
    columns: IColumn[];
    data: IGroup;
+   setListsGroup: React.Dispatch<React.SetStateAction<IGroup[]>>;
 }
-const Table = ({ columns, data }: IPropsTable) => {
-   const [listTask, setListTask] = useState<ITask[]>(data.tasks);
-   // const [isRenameTask, setIsRenameTask] = useState(false);
-   // const [valueTask, setValueTask] = useState('');
+const Table = ({ columns, data, setListsGroup }: IPropsTable) => {
    const [valueAddTask, setValueAddTask] = useState('');
    const [messageApi, contextHolder] = message.useMessage();
    const handleValueAdd = useRef<any>();
@@ -33,7 +31,18 @@ const Table = ({ columns, data }: IPropsTable) => {
    const [isOpenListTypes, setIsOpenListTypes] = useState<boolean>(false);
    const listColumns = useAppSelector((state) => state.mainTableSlice.listColumns.datas);
    const dispatch = useAppDispatch();
-   // const currGroup = useAppSelector(state => state.groupSlice.editGroup.data)
+   const handleDeleteColumnAndTask = (idColumn: string) => {
+      setListsGroup((prev) => {
+         const updatedGroups = prev.map((group) => ({
+            ...group,
+            tasks: group.tasks.map((task) => ({
+               ...task,
+               values: task.values.filter((value) => value.belongColumn !== idColumn),
+            })),
+         }));
+         return updatedGroups;
+      });
+   };
 
    interface ITaskChecked {
       _id: string;
@@ -53,7 +62,7 @@ const Table = ({ columns, data }: IPropsTable) => {
       const deleteTask = async () => {
          messageApi.loading('Đợi xý nhé !...');
          await axios.delete(`http://localhost:3001/v1/api/group/${data._id}/task/${taskID}`);
-         setListTask((pre) => pre.filter((item) => item._id !== taskID));
+         // setListTask((pre) => pre.filter((item) => item._id !== taskID));
          messageApi.success('Xoá task thành công!');
       };
       deleteTask();
@@ -90,14 +99,6 @@ const Table = ({ columns, data }: IPropsTable) => {
                name: valueAddTask,
                position: data.tasks.length + 1,
             });
-            if (res.data.metadata)
-               setListTask((pre) => {
-                  const newTask = res.data.metadata?.task;
-                  if (newTask) {
-                     return [...pre, newTask];
-                  }
-                  return pre;
-               });
             messageApi.success('Tạo task thành công!');
             setValueAddTask('');
          };
@@ -124,6 +125,7 @@ const Table = ({ columns, data }: IPropsTable) => {
                            name={col.name}
                            position={col.position}
                            key={col._id}
+                           handleDeleteColumnAndTask={handleDeleteColumnAndTask}
                         />
                      );
                   })}
@@ -145,7 +147,7 @@ const Table = ({ columns, data }: IPropsTable) => {
                </tr>
             </thead>
             <tbody className="table__data">
-               {listTask.map((task) => {
+               {data.tasks.map((task) => {
                   return (
                      <tr className="table__data-task" key={task._id}>
                         <td className="table__data-task-value">
@@ -165,14 +167,14 @@ const Table = ({ columns, data }: IPropsTable) => {
                                  style={{
                                     backgroundColor: `${
                                        itemValue.typeOfValue === 'multiple'
-                                          ? itemValue.valueId.color
+                                          ? itemValue.valueId?.color
                                           : ''
                                     }`,
                                  }}
                                  className="table__data-task-value"
                               >
                                  {itemValue.typeOfValue === 'multiple'
-                                    ? itemValue.valueId.value
+                                    ? itemValue.valueId?.value
                                     : itemValue.value}
                               </td>
                            );

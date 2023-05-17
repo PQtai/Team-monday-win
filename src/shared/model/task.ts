@@ -2,12 +2,12 @@ export interface IValueOfTask {
    belongColumn: string;
    typeOfValue: string;
    _id: string;
-   value: string;
+   value: string | null;
    valueId: {
       _id: string;
-      value: string;
+      value: string | null;
       color: string;
-   };
+   } | null;
    name: string;
    position: number;
 }

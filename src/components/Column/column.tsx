@@ -15,12 +15,14 @@ import {
    editColumn,
    renameColMainTable,
 } from '../MainTable/mainTable.reducer';
+import { ITask } from '~/shared/model/task';
 interface IPropsColumn {
    name: string;
    _id: string;
    position: number;
+   handleDeleteColumnAndTask: (idColumn: string) => void;
 }
-const Column = ({ name, _id, position }: IPropsColumn) => {
+const Column = ({ name, _id, position, handleDeleteColumnAndTask }: IPropsColumn) => {
    const [isEditInput, setIsEditInput] = useState<boolean>(false);
    const listTypes = useAppSelector((state) => state.listTypesSlice.listTypes.datas);
    const listColumns = useAppSelector((state) => state.mainTableSlice.listColumns.datas);
@@ -50,6 +52,7 @@ const Column = ({ name, _id, position }: IPropsColumn) => {
             idColumn,
          }),
       );
+      handleDeleteColumnAndTask(idColumn);
       const newArr = listColumns.filter((column) => column._id !== _id);
       //          console.log(newArr);
 

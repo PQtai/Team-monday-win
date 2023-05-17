@@ -3,26 +3,28 @@ import { faAngleDown, faEllipsis } from '@fortawesome/free-solid-svg-icons';
 import './group.scss';
 import { useRef, useState } from 'react';
 import Tippy from '../Tippy';
-import HeaderTable from './headerTable';
-import Row from '../Row';
 import { IGroup } from '~/shared/model/group';
 import { IColumn } from '~/shared/model/column';
 import { Dropdown, MenuProps } from 'antd';
 import images from '~/assets/svg';
-import { SERVER_API_URL } from '~/config/constants';
-import axios from 'axios';
-import { useParams } from 'react-router-dom';
-import { IResponseData } from '~/shared/model/global';
 import { useAppDispatch } from '~/config/store';
-import { deleteGroup, updateGroup } from './group.reducer';
+import { updateGroup } from './group.reducer';
 import Table from './Table/table';
+import { ITask } from '~/shared/model/task';
 interface IPropsGroup {
    data: IGroup;
    columns: IColumn[];
    handleAddNewGroup: () => Promise<void>;
    handleDeleteGroup: (id: string) => void;
+   setListsGroup: React.Dispatch<React.SetStateAction<IGroup[]>>;
 }
-const Group = ({ data, columns, handleAddNewGroup, handleDeleteGroup }: IPropsGroup) => {
+const Group = ({
+   data,
+   columns,
+   handleAddNewGroup,
+   handleDeleteGroup,
+   setListsGroup,
+}: IPropsGroup) => {
    const [valueNameInput, setValueNameInput] = useState<string>(data.name);
    const dispatch = useAppDispatch();
    const handleChangeValue = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -117,7 +119,7 @@ const Group = ({ data, columns, handleAddNewGroup, handleDeleteGroup }: IPropsGr
             </div>
          </div>
          <div className="group__table">
-            <Table columns={columns} data={data} />
+            <Table setListsGroup={setListsGroup} columns={columns} data={data} />
          </div>
       </div>
    );

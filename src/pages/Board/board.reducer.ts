@@ -1,4 +1,5 @@
 import {
+   PayloadAction,
    createAsyncThunk,
    createSlice,
    isFulfilled,
@@ -6,9 +7,11 @@ import {
    isRejected,
 } from '@reduxjs/toolkit';
 import axios from 'axios';
+import { IDataCreateCol } from '~/components/MainTable/mainTable.reducer';
 import { SERVER_API_URL } from '~/config/constants';
 import { IBoard, IBoardResponse, IBoardsResponse } from '~/shared/model/board';
 import { IResponseData } from '~/shared/model/global';
+import { IValueOfTask } from '~/shared/model/task';
 import { serializeAxiosError } from '~/shared/reducers/reducer.utils';
 
 const apiUrl = SERVER_API_URL;
@@ -228,7 +231,55 @@ const boardSlice = createSlice({
       // });
    },
    reducers: {
-      
+      setDefaultValueToTask: (state, action: PayloadAction<IDataCreateCol>) => {
+         const { data } = state.currBoard;
+         if (data) {
+            const { column, tasksColumnsIds, defaultValue } = action.payload;
+            const newValueTasks = tasksColumnsIds.map((taskId) => {
+               const defaultValueTask: IValueOfTask = {
+                  belongColumn: column._id,
+                  typeOfValue: defaultValue ? 'multiple' : 'single',
+                  _id: taskId,
+                  value: defaultValue ? null : defaultValue,
+                  valueId: defaultValue && typeof defaultValue !== 'string' ? defaultValue : null,
+                  name: column.name,
+                  position: column.position,
+               };
+               return defaultValueTask;
+            });
+            console.log(newValueTasks);
+
+            // Tạo giá trị mặc định mới dạng IValueOfTask từ column vừa tạo
+
+            // Cập nhật giá trị mặc định cho tất cả các values trong tasks
+            const updatedGroups = data.groups.map((group) => {
+               const updatedTasks = group.tasks.map((task, index) => ({
+                  ...task,
+                  values: [...task.values, newValueTasks[index]],
+               }));
+
+               return {
+                  ...group,
+                  tasks: updatedTasks,
+               };
+            });
+
+            // Trả về state mới với currBoard.data đã được cập nhật
+            return {
+               ...state,
+               currBoard: {
+                  ...state.currBoard,
+                  data: {
+                     ...data,
+                     groups: updatedGroups,
+                  },
+               },
+            };
+         }
+
+         return state;
+      },
+
       resetCurrBoard(state) {
          state.currBoard = {
             data: undefined,
@@ -238,10 +289,9 @@ const boardSlice = createSlice({
             mess: '',
          };
       },
-
    },
 });
 
-export const { resetCurrBoard } = boardSlice.actions;
+export const { resetCurrBoard, setDefaultValueToTask } = boardSlice.actions;
 
 export default boardSlice.reducer;

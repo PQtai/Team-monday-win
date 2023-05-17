@@ -57,19 +57,6 @@ const HeaderTable = ({ columns, data }: IPropsHeaderTable) => {
          <ResizableBox id={'0'}>
             <span>Item</span>
          </ResizableBox>
-         {listColumns.map((col, index) => {
-            return (
-               // <ResizableBox key={col._id} id={col._id}>
-               //    <span>{col.name}</span>
-               // </ResizableBox>
-               <Column
-                  key={col._id}
-                  position={listColumns.length + 1}
-                  _id={col._id}
-                  name={col.name}
-               />
-            );
-         })}
          <li className="col__group__item">
             <input className="col__group--check" type="checkbox" id="plus--col" />
             <label className="plus__lable" htmlFor="plus--col">

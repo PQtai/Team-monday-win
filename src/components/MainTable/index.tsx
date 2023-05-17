@@ -4,19 +4,17 @@ import Group from '../Group';
 import HeadView from '../HeadView';
 import './mainTable.scss';
 import { faCircleExclamation, faPlus } from '@fortawesome/free-solid-svg-icons';
-import { IResponseData, StatusType } from '~/shared/model/global';
+import { StatusType } from '~/shared/model/global';
 import { IBoard } from '~/shared/model/board';
 import { IGroup } from '~/shared/model/group';
 import { useEffect, useState } from 'react';
-import { SERVER_API_URL } from '~/config/constants';
-import axios from 'axios';
 import { useParams } from 'react-router-dom';
-// import ShowNotification from '~/utils/showNotification';
 import { useAppDispatch, useAppSelector } from '~/config/store';
 import { createGroup, deleteGroup, resetCreateGroup } from '../Group/group.reducer';
 import { isNotification } from '../Notification/notification.reducer';
 import { getListTypes } from '../ListTypes/listTypes.reducer';
-import { setListColumnsMainTable } from './mainTable.reducer';
+import { resetDataCreateCol, setListColumnsMainTable } from './mainTable.reducer';
+import { IValueOfTask } from '~/shared/model/task';
 interface IPropMainTable {
    currBoard: IBoard;
 }
@@ -24,22 +22,30 @@ interface IPropMainTable {
 const MainTable = ({ currBoard }: IPropMainTable) => {
    const dataCreateGroup = useAppSelector((state) => state.groupSlice.createGroup);
    const listColumns = useAppSelector((state) => state.mainTableSlice.listColumns.datas);
+   const dataCreateCol = useAppSelector((state) => state.mainTableSlice.createCol.data);
 
    const [listsGroup, setListsGroup] = useState<IGroup[]>(currBoard.groups);
+   console.log(listsGroup);
+
    const dispatch = useAppDispatch();
    const { idBoard } = useParams();
    const notifi = useAppSelector((state) => state.groupSlice.createGroup);
 
    useEffect(() => {
       dispatch(getListTypes());
+      // eslint-disable-next-line react-hooks/exhaustive-deps
    }, []);
    useEffect(() => {
-      setListsGroup(currBoard.groups);
+      if (currBoard) {
+         setListsGroup(currBoard.groups);
+         // const listTask: ITask[] = currBoard.groups.flatMap((group) => group.tasks);
+         // setListTask(listTask);
+      }
    }, [currBoard]);
 
    useEffect(() => {
       dispatch(setListColumnsMainTable(currBoard.columns));
-   }, [currBoard.columns]);
+   }, [currBoard.columns, dispatch]);
 
    useEffect(() => {
       const newGroup = dataCreateGroup.data;
@@ -49,7 +55,54 @@ const MainTable = ({ currBoard }: IPropMainTable) => {
          });
          dispatch(resetCreateGroup());
       }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
    }, [dataCreateGroup]);
+
+   // useEffect(() => {
+   //    if (dataCreateCol) {
+   //       console.log(dataCreateCol);
+
+   //       // dispatch(setDefaultValueToTask(dataCreateCol));
+   //       dispatch(resetDataCreateCol());
+   //    }
+   // }, [dataCreateCol]);
+
+   useEffect(() => {
+      if (dataCreateCol !== undefined) {
+         setListsGroup((prev) => {
+            const { _id, name, position } = dataCreateCol.column;
+            const defaultValue = dataCreateCol.defaultValue;
+            const valueIds = [...dataCreateCol.tasksColumnsIds];
+            const updatedTasks = prev.map((group, index1) => ({
+               ...group,
+               tasks: group.tasks.map((task, index) => {
+                  const valueTaskId = valueIds.shift();
+                  const newDefaultValueTask: IValueOfTask = {
+                     _id: valueTaskId!,
+                     belongColumn: _id,
+                     value: defaultValue ? null : defaultValue,
+                     valueId:
+                        defaultValue && typeof defaultValue !== 'string' ? defaultValue : null,
+                     name,
+                     position,
+                     typeOfValue: defaultValue ? 'multiple' : 'single',
+                  };
+
+                  const prevValue = [...task.values];
+
+                  prevValue.push(newDefaultValueTask);
+                  return {
+                     ...task,
+                     values: prevValue,
+                  };
+               }),
+            }));
+            return updatedTasks;
+         });
+      }
+      dispatch(resetDataCreateCol());
+   }, [dataCreateCol, dispatch]);
+
    const handleAddNewGroup = async () => {
       if (idBoard) {
          dispatch(
@@ -115,6 +168,7 @@ const MainTable = ({ currBoard }: IPropMainTable) => {
                         columns={listColumns}
                         key={item._id}
                         data={item}
+                        setListsGroup={setListsGroup}
                      />
                   );
                })}
