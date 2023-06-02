@@ -29,8 +29,8 @@ const LoginStep2 = () => {
       try {
          if (values.email && values.password) {
             await dispatch(loginAccount(values));
-            if(typeof userLogin.data?.user !== 'undefined'){
-               navigate('/')
+            if (typeof userLogin.data?.user !== 'undefined') {
+               navigate('/');
             }
          }
       } catch (error) {
@@ -90,7 +90,7 @@ const LoginStep2 = () => {
             <div className="suggest__signup-wrapper">
                <div className="suggest__signup-component">
                   <span>Don't have an account yet?</span>
-                  <Link to="/register" className="suggest__signup-link">
+                  <Link to="/register/-1" className="suggest__signup-link">
                      <span>Sign up</span>
                   </Link>
                </div>
